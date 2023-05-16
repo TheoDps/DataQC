@@ -118,6 +118,12 @@ Channel
     .into { gte_ch_gen; gte_ch_exp }
 
 Channel
+    .from(params.kinship)
+    .map { study -> [file("${study}")]}
+    .ifEmpty { exit 1, "Input kinship file not found!" }
+    .into { kinship_ch }
+
+Channel
     .fromPath(params.report_template)
     .ifEmpty { exit 1, "Input report not found!" }
     .set { report_ch }
@@ -482,6 +488,7 @@ process GeneExpressionQC {
     input:
       file exp_mat from expfile_ch
       file gte from gte_ch_exp
+      file kinship from kinship_ch
       file sexcheck from sexcheck
       file geno_filter from sample_qc
       val exp_platform from params.exp_platform
