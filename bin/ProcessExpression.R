@@ -80,6 +80,82 @@ shap_test <- function(x){
     }
 }
 
+GAIT2_regress_kinship <- function(expression) {
+
+  # library(progress)
+  # library(tidyverse, warn.conflicts = F)
+  # install.packages("devtools")
+  # devtools::install_github("variani/lme4qtl")
+  library(lme4qtl, warn.conflicts = F)
+  library(tibble)
+  library(tidyr)
+  library(purrr)
+
+  f_kinship <- "Kinship_915.matrix"
+  message("Reading kinship matrix from ", f_kinship)
+
+  # Match id type to expression
+  expr_mat_ids <- colnames(expression)
+  kinship_ids <- paste0("GAIT2_", expr_mat_ids)
+  stopifnot(!any(duplicated(kinship_ids)))
+  # Read kinship matrix
+  read.table(f_kinship, header = T) %>%
+    # Set rownames to samples ids + filter those matching expression matrix
+    mutate(tmp = colnames(.)) %>%
+    filter(tmp %in% kinship_ids) %>%
+    column_to_rownames("tmp") %>%
+    # Reorder rows and columns to match expression matrix
+    select(all_of(as.character(kinship_ids))) %>%
+    relocate(all_of(kinship_ids)) %>%
+    # Rename rows and columns to match expression matrix
+    `colnames<-`(expr_mat_ids) %>%
+    `row.names<-`(expr_mat_ids) %>%
+    as.matrix() ->
+    kinship
+  #  Make sure that we haven't shuffled the kinship coefficients
+  stopifnot(isSymmetric(kinship))
+
+  regress_kinship <- function(gene_expr) {
+    d <- data.frame(ID = expr_mat_ids,
+                    expr = gene_expr,
+                    row.names = expr_mat_ids)
+    m <- relmatLmer(  
+      expr ~ (1 | ID),
+      d,
+      relmat = list(ID = kinship),
+      control = lme4::lmerControl(
+        check.conv.singular = lme4::.makeCC(
+          action = "ignore",
+          tol = 1e-4)
+          )
+    )
+    return(signif(resid(m), digits = 6))
+  }
+
+  message("Regressing kinship from expression data.")
+  # Deprecated but avoid having to install `progress`
+  expression %>%
+    as.data.frame() %>%
+    # Transform to long format
+    rownames_to_column("GENE") %>%
+    pivot_longer(-GENE) %>%
+    group_by(GENE) %>%
+    nest() %>%
+    # apply regress kinship to each gene
+    mutate(value = map(data, function(df)
+      regress_kinship(df$value))) %>%
+    # Transform back to wide format
+    unnest_wider(value) %>%
+    select(!data) %>%
+    # Put gene names back as rownames
+    column_to_rownames("GENE") %>%
+    # Convert back to matrix
+    as.matrix() ->
+    residuals
+  message("Done.")
+  return(residuals)
+}
+
 illumina_array_preprocess <- function(exp, gte, gen, normalize = TRUE){
     # Leave in only probes for which there is empirical probe mapping info and convert data into matrix
     emp <- fread(args$emp_probe_mapping, keepLeadingZeros = TRUE)
@@ -773,6 +849,9 @@ summary_table <- rbind(summary_table, summary_table_temp)
 #and_p <- apply(and_p, 1, Z_transform) # No Z-transform as data will be forced to normal distribution anyway
 and_p <- apply(and_pp, 1, INT_transform)
 and_p <- t(and_p)
+
+# GAIT2-specific: regress kinship
+GAIT2_regress_kinship(and_p)
 
 pcs <- prcomp(t(and_p), center = FALSE, scale. = FALSE)
 PCs <- data.table(Sample = rownames(pcs$x), pcs$x)
