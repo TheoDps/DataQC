@@ -838,7 +838,7 @@ message("Find related samples.")
 related <- snp_plinkKINGQC(
   plink2.path = PLINK2,
   bedfile.in = paste0(bed_simplepath, "_QC.bed"),
-  thr.king = 2^-4.5,
+  thr.king = 0.5,
   make.bed = FALSE,
   ncores = 4,
   extra.options = paste0("--remove ", het_failed_samples_out_path)
@@ -863,7 +863,7 @@ related_individuals <- unique(c(related$IID1, related$IID2))
 samples_to_remove_due_to_relatedness <- c()
 
 # If there are related individuals, remove these in the following step.
-if (length(related_individuals) > 0) {
+if (FALSE) {
 
   # Define a graph wherein each relation depicts an edge between vertices (samples)
   relatedness_graph <- graph_from_edgelist(
