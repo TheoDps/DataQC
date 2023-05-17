@@ -1,5 +1,9 @@
 # eQTLGen data QC pipeline
 
+> **Note** This version of the pipeline was edited to process the GAIT2 consortium's data.
+> * Filter on relatedness is ignored in `GenQCAndPosAssign`
+> * We regress out the effect of the kinship structure in `ProcessExpression`
+
 Automatic data quality check and processing for unimputed genotype data and unprocessed gene expression data.
 
 Performs the following main steps:
