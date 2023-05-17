@@ -1,18 +1,16 @@
 #!/bin/bash
-
-#SBATCH --time=48:00:00
-#SBATCH -N 1
-#SBATCH --ntasks-per-node=1
-#SBATCH --mem=6G
-#SBATCH --mail-type=BEGIN
-#SBATCH --mail-type=END
-#SBATCH --mail-type=FAIL
-#SBATCH --job-name="DataQc"
+#$ -cwd
+#$ -N DataQC
+#$ -pe smp 1
+#$ -adds l_hard h_vmem 6G
+#$ -adds l_hard m_mem_free 6G
+#$ -M 2395453@dundee.ac.uk
+#$ -m beas
 
 # These are needed modules in UT HPC to get singularity and Nextflow running. Replace with appropriate ones for your HPC.
-module load java-1.8.0_40
-module load singularity/3.5.3
-module load squashfs/4.4
+# module load java-1.8.0_40
+# module load singularity/3.5.3
+# module load squashfs/4.4
 
 # If you follow the eQTLGen phase II cookbook and analysis folder structure,
 # some of the following paths are pre-filled.
@@ -30,13 +28,14 @@ set -f
 nextflow_path=../../tools # folder where Nextflow executable is
 
 # Genotype data
-bfile_path=[full path to your input genotype files without .bed/.bim/.fam extension]
+bfile_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_eqtlgen_format_genotyped_variants
 
 # Other data
-exp_path=[full path to your gene expression matrix]
-gte_path=[full path to your genotype-to-expression file]
-exp_platform=[expression platform name: HT12v3/HT12v4/HuRef8/RNAseq/AffyU219/AffyHumanExon]
-cohort_name=[name of the cohort]
+exp_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_eqtlgen_format_expression.txt.gz
+exp_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_eqtlgen_format_expression_subset.txt.gz
+gte_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_GTE.tsv
+exp_platform="RNAseq"
+cohort_name="GAIT2_RNAseq"
 genome_build="GRCh37"
 output_path=../output # Output path
 
@@ -63,9 +62,11 @@ NXF_VER=21.10.6 ${nextflow_path}/nextflow run DataQC.nf \
 --bfile ${bfile_path} \
 --expfile ${exp_path} \
 --gte ${gte_path} \
+--kinship "/cluster/aztbrown_lab/gait/Genotypes/Kinship_915.matrix" \
 --exp_platform ${exp_platform} \
 --cohort_name ${cohort_name} \
 --genome_build ${genome_build} \
---outdir ${output_path}  \
--profile slurm,singularity \
+--outdir ${output_path} \
+-profile sge,singularity \
+--GenOutThresh 1.5 \
 -resume
