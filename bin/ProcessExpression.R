@@ -139,9 +139,9 @@ GAIT2_regress_kinship <- function(expression) {
     # Transform to long format
     rownames_to_column("GENE") %>%
     pivot_longer(-GENE) %>%
+    # apply regress kinship to each gene
     group_by(GENE) %>%
     nest() %>%
-    # apply regress kinship to each gene
     mutate(value = map(data, function(df)
       regress_kinship(df$value))) %>%
     # Transform back to wide format
@@ -851,7 +851,7 @@ and_p <- apply(and_pp, 1, INT_transform)
 and_p <- t(and_p)
 
 # GAIT2-specific: regress kinship
-GAIT2_regress_kinship(and_p)
+and_p <- GAIT2_regress_kinship(and_p)
 
 pcs <- prcomp(t(and_p), center = FALSE, scale. = FALSE)
 PCs <- data.table(Sample = rownames(pcs$x), pcs$x)
