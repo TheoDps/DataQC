@@ -1,3 +1,5 @@
 .nextflow*
 work/*
 singularity_img
+DataQC.o[1-9][1-9][1-9][1-9][1-9][1-9][1-9]
+DataQC.e[1-9][1-9][1-9][1-9][1-9][1-9][1-9]
