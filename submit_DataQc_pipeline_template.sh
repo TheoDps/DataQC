@@ -32,10 +32,9 @@ bfile_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_eqtlgen
 
 # Other data
 exp_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_eqtlgen_format_expression.txt.gz
-exp_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_eqtlgen_format_expression_subset.txt.gz
 gte_path=/cluster/aztbrown_lab/eQTLGen_phase2/00_PrepareData/out/GAIT2_GTE.tsv
 exp_platform="RNAseq"
-cohort_name="GAIT2_RNAseq"
+cohort_name="GAIT2"
 genome_build="GRCh37"
 output_path=../output # Output path
 
@@ -68,5 +67,5 @@ NXF_VER=21.10.6 ${nextflow_path}/nextflow run DataQC.nf \
 --genome_build ${genome_build} \
 --outdir ${output_path} \
 -profile sge,singularity \
---GenOutThresh 1.5 \
+--GenOutThresh 0.8 \
 -resume
