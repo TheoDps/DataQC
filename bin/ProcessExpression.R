@@ -851,7 +851,8 @@ and_p <- apply(and_pp, 1, INT_transform)
 and_p <- t(and_p)
 
 # GAIT2-specific: regress kinship
-and_p <- GAIT2_regress_kinship(and_p)
+and_p_ <- GAIT2_regress_kinship(and_p)
+and_p <- and_p_
 
 pcs <- prcomp(t(and_p), center = FALSE, scale. = FALSE)
 PCs <- data.table(Sample = rownames(pcs$x), pcs$x)
